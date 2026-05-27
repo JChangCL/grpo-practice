@@ -15,6 +15,17 @@ def extract_answer(text: str) -> str | None:
     return match.group(1).strip().replace(",", "")
 
 
+def extract_last_number(text: str) -> str | None:
+    matches = ANY_NUMBER_RE.findall(text)
+    if not matches:
+        return None
+    return matches[-1].strip().replace(",", "")
+
+
+def extract_numeric_prediction(text: str) -> str | None:
+    return extract_answer(text) or extract_last_number(text)
+
+
 def normalize_number(text: str) -> float:
     return float(text.strip().replace(",", ""))
 

@@ -37,6 +37,7 @@ grpo_full/config.py          # Dataclass config and YAML loader
 grpo_full/data.py            # GSM8K prompt dataset
 grpo_full/rewards.py         # Replaceable reward functions
 grpo_full/grpo.py            # GRPO sampling, loss, and trainer
+grpo_full/eval.py            # GSM8K baseline/checkpoint evaluator
 grpo_full/train.py           # CLI entrypoint
 requirements.txt             # Python dependencies
 ```
@@ -69,6 +70,30 @@ W&B logs:
 - `train/mean_ratio`
 - `train/mean_completion_len`
 - `samples/table`
+
+## Evaluation
+
+Evaluate the baseline model on GSM8K:
+
+```bash
+python -m grpo_full.eval \
+  --model Qwen/Qwen2.5-0.5B-Instruct \
+  --split test \
+  --max-examples 100 \
+  --output-jsonl eval_outputs/baseline_gsm8k.jsonl
+```
+
+Evaluate a GRPO checkpoint:
+
+```bash
+python -m grpo_full.eval \
+  --model outputs/grpo-qwen-0.5b/step-100 \
+  --split test \
+  --max-examples 100 \
+  --output-jsonl eval_outputs/grpo_step100_gsm8k.jsonl
+```
+
+Compare `accuracy`, `correct`, and the JSONL records to inspect where the model improves or fails.
 
 ## Notes
 
