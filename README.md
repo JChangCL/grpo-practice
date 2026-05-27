@@ -1,18 +1,18 @@
 # Full GRPO Training Skeleton
 
-這是一個「小模型、完整機制」的 GRPO 實作骨架，保留：
+This project is a small-model GRPO training skeleton with the full core mechanism intact:
 
 - group-relative advantage normalization
-- old-policy logprob snapshot
+- old-policy logprob snapshots
 - PPO-style ratio clipping
 - reference-model KL penalty
 - token-level loss masking
-- W&B metrics / histogram logging
-- checkpoint save / resume-friendly config
+- W&B metrics and histogram logging
+- checkpoint saving
 
-預設模型是 `Qwen/Qwen2.5-0.5B-Instruct`，資料集是 `openai/gsm8k`。你可以改成任何 Hugging Face causal LM 或本機模型路徑。
+The default model is `Qwen/Qwen2.5-0.5B-Instruct`, and the default dataset is `openai/gsm8k`. You can replace the model with any Hugging Face causal LM or a local model path.
 
-## 快速開始
+## Quick Start
 
 ```bash
 python -m venv .venv
@@ -22,28 +22,28 @@ wandb login
 python -m grpo_full.train --config configs/grpo_tiny.yaml
 ```
 
-如果不想上傳到 W&B：
+To keep W&B logs offline:
 
 ```bash
 WANDB_MODE=offline python -m grpo_full.train --config configs/grpo_tiny.yaml
 ```
 
-## 專案結構
+## Project Structure
 
 ```text
-configs/grpo_tiny.yaml       # 小模型完整 GRPO 設定
-docs/outline.md              # 分階段設計與實作 outline
-grpo_full/config.py          # dataclass config + YAML loader
+configs/grpo_tiny.yaml       # Small-model full GRPO config
+docs/outline.md              # Phased design and implementation outline
+grpo_full/config.py          # Dataclass config and YAML loader
 grpo_full/data.py            # GSM8K prompt dataset
-grpo_full/rewards.py         # 可替換 reward functions
-grpo_full/grpo.py            # GRPO sampling / loss / trainer
+grpo_full/rewards.py         # Replaceable reward functions
+grpo_full/grpo.py            # GRPO sampling, loss, and trainer
 grpo_full/train.py           # CLI entrypoint
-requirements.txt             # dependencies
+requirements.txt             # Python dependencies
 ```
 
-## 資料集
+## Dataset
 
-設定在 `configs/grpo_tiny.yaml`：
+The dataset is configured in `configs/grpo_tiny.yaml`:
 
 ```yaml
 dataset:
@@ -53,11 +53,11 @@ dataset:
   max_examples: 2000
 ```
 
-GSM8K 的 `answer` 欄位通常包含推理文字與 `#### final_answer`，訓練器會抽出 `####` 後面的標準答案當 reward target。
+GSM8K answers usually include reasoning text followed by `#### final_answer`. The trainer extracts the value after `####` and uses it as the reward target.
 
-## 重要指標
+## Key Metrics
 
-W&B 會紀錄：
+W&B logs:
 
 - `train/loss`
 - `train/policy_loss`
@@ -70,6 +70,6 @@ W&B 會紀錄：
 - `train/mean_completion_len`
 - `samples/table`
 
-## 注意
+## Notes
 
-這是研究/教學用最小完整實作，不是高吞吐量分散式訓練器。若要擴大到正式訓練，下一步通常是加入 Accelerate/FSDP、vLLM rollout、LoRA/QLoRA、reward model server、eval harness。
+This is a minimal research and learning implementation, not a high-throughput distributed trainer. For larger runs, the next steps are usually Accelerate/FSDP, vLLM rollouts, LoRA/QLoRA, a reward model server, and an evaluation harness.
