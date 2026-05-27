@@ -28,10 +28,10 @@
 
 ## Phase 2: Reward 模組化
 
-目前先內建 rule-based reward，方便立即測：
+目前使用 GSM8K 訓練資料，並保留 rule-based verifier reward：
 
 - `format_reward`: 是否包含 `<answer>...</answer>`
-- `math_reward`: 能否答對簡單算術
+- `math_reward`: 是否等於 GSM8K `####` 後的 final answer
 - `length_reward`: 避免過短或過長
 
 之後可替換成：

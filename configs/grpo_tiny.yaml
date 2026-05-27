@@ -2,6 +2,12 @@ model_name: Qwen/Qwen2.5-0.5B-Instruct
 output_dir: outputs/grpo-qwen-0.5b
 seed: 42
 
+dataset:
+  name: openai/gsm8k
+  config_name: main
+  split: train
+  max_examples: 2000
+
 train:
   num_steps: 100
   batch_size: 2

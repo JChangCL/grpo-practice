@@ -15,7 +15,7 @@ from tqdm import trange
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from grpo_full.config import AppConfig
-from grpo_full.data import ArithmeticPromptDataset, PromptExample
+from grpo_full.data import GSM8KPromptDataset, PromptExample
 from grpo_full.rewards import total_reward
 
 
@@ -121,7 +121,13 @@ class GRPOTrainer:
             lr=self.train_cfg.learning_rate,
             weight_decay=self.train_cfg.weight_decay,
         )
-        self.dataset = ArithmeticPromptDataset(seed=cfg.seed)
+        self.dataset = GSM8KPromptDataset(
+            name=cfg.dataset.name,
+            config_name=cfg.dataset.config_name,
+            split=cfg.dataset.split,
+            max_examples=cfg.dataset.max_examples,
+            seed=cfg.seed,
+        )
         self.run = self._init_wandb()
 
     def _init_wandb(self):

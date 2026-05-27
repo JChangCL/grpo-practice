@@ -10,7 +10,7 @@
 - W&B metrics / histogram logging
 - checkpoint save / resume-friendly config
 
-預設模型是 `Qwen/Qwen2.5-0.5B-Instruct`。你可以改成任何 Hugging Face causal LM 或本機模型路徑。
+預設模型是 `Qwen/Qwen2.5-0.5B-Instruct`，資料集是 `openai/gsm8k`。你可以改成任何 Hugging Face causal LM 或本機模型路徑。
 
 ## 快速開始
 
@@ -34,12 +34,26 @@ WANDB_MODE=offline python -m grpo_full.train --config configs/grpo_tiny.yaml
 configs/grpo_tiny.yaml       # 小模型完整 GRPO 設定
 docs/outline.md              # 分階段設計與實作 outline
 grpo_full/config.py          # dataclass config + YAML loader
-grpo_full/data.py            # prompt dataset
+grpo_full/data.py            # GSM8K prompt dataset
 grpo_full/rewards.py         # 可替換 reward functions
 grpo_full/grpo.py            # GRPO sampling / loss / trainer
 grpo_full/train.py           # CLI entrypoint
 requirements.txt             # dependencies
 ```
+
+## 資料集
+
+設定在 `configs/grpo_tiny.yaml`：
+
+```yaml
+dataset:
+  name: openai/gsm8k
+  config_name: main
+  split: train
+  max_examples: 2000
+```
+
+GSM8K 的 `answer` 欄位通常包含推理文字與 `#### final_answer`，訓練器會抽出 `####` 後面的標準答案當 reward target。
 
 ## 重要指標
 

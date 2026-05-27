@@ -34,10 +34,19 @@ class WandbConfig:
 
 
 @dataclass
+class DatasetConfig:
+    name: str = "openai/gsm8k"
+    config_name: str = "main"
+    split: str = "train"
+    max_examples: int | None = None
+
+
+@dataclass
 class AppConfig:
     model_name: str = "Qwen/Qwen2.5-0.5B-Instruct"
     output_dir: str = "outputs/grpo"
     seed: int = 42
+    dataset: DatasetConfig = field(default_factory=DatasetConfig)
     train: TrainConfig = field(default_factory=TrainConfig)
     wandb: WandbConfig = field(default_factory=WandbConfig)
 
@@ -54,10 +63,12 @@ def load_config(path: str | Path) -> AppConfig:
 
     train = _merge_dataclass(TrainConfig, raw.get("train", {}))
     wandb = _merge_dataclass(WandbConfig, raw.get("wandb", {}))
+    dataset = _merge_dataclass(DatasetConfig, raw.get("dataset", {}))
     return AppConfig(
         model_name=raw.get("model_name", AppConfig.model_name),
         output_dir=raw.get("output_dir", AppConfig.output_dir),
         seed=raw.get("seed", AppConfig.seed),
+        dataset=dataset,
         train=train,
         wandb=wandb,
     )
