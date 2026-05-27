@@ -1,0 +1,25 @@
+model_name: Qwen/Qwen2.5-0.5B-Instruct
+output_dir: outputs/grpo-qwen-0.5b
+seed: 42
+
+train:
+  num_steps: 100
+  batch_size: 2
+  num_generations: 4
+  max_prompt_length: 256
+  max_new_tokens: 96
+  temperature: 0.9
+  top_p: 0.95
+  learning_rate: 0.000005
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+  clip_range: 0.2
+  kl_beta: 0.04
+  advantage_eps: 0.000001
+  log_every: 1
+  save_every: 50
+
+wandb:
+  project: grpo-full
+  run_name: qwen-0.5b-full-grpo
+  mode: online
