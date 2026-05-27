@@ -35,13 +35,27 @@ def format_reward(completion: str) -> float:
 
 
 def math_reward(completion: str, expected: str) -> float:
-    answer = extract_answer(completion)
-    if answer is None:
-        return 0.0
+    formatted_answer = extract_answer(completion)
+    fallback_answer = extract_last_number(completion)
+
     try:
-        return 1.0 if normalize_number(answer) == normalize_number(expected) else -0.5
+        expected_value = normalize_number(expected)
     except ValueError:
-        return -0.5
+        return 0.0
+
+    if formatted_answer is not None:
+        try:
+            return 1.0 if normalize_number(formatted_answer) == expected_value else -0.5
+        except ValueError:
+            return -0.5
+
+    if fallback_answer is not None:
+        try:
+            return 0.5 if normalize_number(fallback_answer) == expected_value else -0.2
+        except ValueError:
+            return -0.2
+
+    return 0.0
 
 
 def length_reward(completion: str, min_chars: int = 12, max_chars: int = 600) -> float:

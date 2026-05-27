@@ -13,7 +13,7 @@ train:
   batch_size: 2
   num_generations: 4
   max_prompt_length: 256
-  max_new_tokens: 96
+  max_new_tokens: 256
   temperature: 0.9
   top_p: 0.95
   learning_rate: 0.000005
@@ -27,5 +27,5 @@ train:
 
 wandb:
   project: grpo-full
-  run_name: qwen-0.5b-full-grpo
+  run_name: qwen-0.5b-full-fallback-reward-t256-test1
   mode: online
