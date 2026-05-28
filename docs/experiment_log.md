@@ -31,6 +31,11 @@ This document tracks the GRPO experiments run on `Qwen/Qwen2.5-0.5B-Instruct` wi
 | Run 4 | fallback reward, `t256`, `lr=1.5e-6`, `kl=0.10`, `steps=125` | step75 | 30 | 0.30 | Bad |
 | Run 4 | same as above | step100 | 28 | 0.28 | Bad |
 | Run 5 | format-weighted reward, `t256`, `lr=2e-6`, `kl=0.08`, `steps=125` | step100 | 35 | 0.35 | Format pressure hurt performance |
+| Run 6 | fallback reward, `t256`, `lr=2e-6`, `kl=0.08`, `steps=125` | step25 | 34 | 0.34 | Worse than baseline |
+| Run 6 | same as above | step50 | 37 | 0.37 | Slight improvement |
+| Run 6 | same as above | step75 | 38 | 0.38 | Best Run 6 checkpoint |
+| Run 6 | same as above | step100 | 33 | 0.33 | Degraded after peak |
+| Run 6 | same as above | step125 | 32 | 0.32 | Continued degradation |
 
 ## Current Best
 
@@ -50,6 +55,7 @@ absolute improvement = +0.05
 - Run 3 controlled KL very strongly, but it was too conservative and did not improve over baseline.
 - Run 4 used an intermediate LR/KL setting, but eval performance degraded.
 - Run 5 changed only the reward weighting toward formatted answers. It did not improve eval accuracy, suggesting that stronger format pressure was premature for this model.
+- Run 6 reran the best pure-GRPO setting with a separate output directory. It improved over baseline at step50-step75, but did not reproduce Run 2 step100 and degraded by step100-step125.
 - W&B reward curves alone were not enough to judge success. GSM8K eval accuracy was necessary because some runs showed reward signal without generalizing.
 
 ## Interpretation
@@ -271,6 +277,28 @@ Decision rule:
 
 ```text
 Select the best early checkpoint by GSM8K test accuracy. Do not continue training past the planned run without eval, because Run 2 collapsed by step200.
+```
+
+## Run 6 Outcome
+
+Run 6 reran the best previous pure-GRPO setting from the base instruct model, with a separate output directory to avoid overwriting older checkpoints.
+
+Eval results on the same 100-example GSM8K test subset:
+
+| Checkpoint | Correct | Accuracy | Result |
+|---:|---:|---:|---|
+| step25 | 34 | 0.34 | Worse than baseline |
+| step50 | 37 | 0.37 | Slightly above baseline |
+| step75 | 38 | 0.38 | Best Run 6 checkpoint |
+| step100 | 33 | 0.33 | Degraded after peak |
+| step125 | 32 | 0.32 | Continued degradation |
+
+Interpretation:
+
+```text
+Run 6 confirms the early-improvement pattern but did not reproduce the previous best 0.41 result from Run 2 step100.
+The best Run 6 checkpoint was step75 at 0.38, followed by degradation at step100 and step125.
+This makes further fine-grained checkpoint hunting less valuable than trying a different improvement lever.
 ```
 
 ## LoRA SFT Plan
