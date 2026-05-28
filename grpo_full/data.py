@@ -10,6 +10,16 @@ SYSTEM_PROMPT = (
     "then put only the final answer inside <answer>...</answer>."
 )
 
+PROMPT_STYLES = {
+    "default": SYSTEM_PROMPT,
+    "concise_xml": "Solve the math problem. End with <answer>number</answer>.",
+    "careful_no_xml": (
+        "You are a careful math assistant. Solve the problem step by step, "
+        "then give the final numeric answer."
+    ),
+    "direct": "Answer the math problem. Give the final numeric answer.",
+}
+
 
 @dataclass(frozen=True)
 class PromptExample:
@@ -18,9 +28,15 @@ class PromptExample:
     question: str
 
 
-def format_chat_prompt(question: str) -> str:
+def format_chat_prompt(question: str, prompt_style: str = "default") -> str:
+    try:
+        system_prompt = PROMPT_STYLES[prompt_style]
+    except KeyError as exc:
+        valid = ", ".join(sorted(PROMPT_STYLES))
+        raise ValueError(f"Unknown prompt_style={prompt_style!r}. Valid styles: {valid}") from exc
+
     return (
-        f"<|im_start|>system\n{SYSTEM_PROMPT}<|im_end|>\n"
+        f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
         f"<|im_start|>user\n{question}<|im_end|>\n"
         f"<|im_start|>assistant\n"
     )
@@ -54,6 +70,7 @@ class GSM8KPromptDataset:
         split: str = "train",
         max_examples: int | None = None,
         seed: int = 0,
+        prompt_style: str = "default",
     ):
         try:
             from datasets import load_dataset
@@ -68,6 +85,7 @@ class GSM8KPromptDataset:
             raw_dataset = raw_dataset.select(range(min(max_examples, len(raw_dataset))))
 
         self.rng = random.Random(seed)
+        self.prompt_style = prompt_style
         self.examples: list[PromptExample] = []
         for row in raw_dataset:
             example = self._row_to_example(row)
@@ -80,7 +98,7 @@ class GSM8KPromptDataset:
         question = str(row["question"])
         answer = extract_gsm8k_answer(str(row["answer"]))
         return PromptExample(
-            prompt=format_chat_prompt(question),
+            prompt=format_chat_prompt(question, self.prompt_style),
             question=question,
             answer=answer,
         )

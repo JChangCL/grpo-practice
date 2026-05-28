@@ -338,3 +338,28 @@ Decision rule:
 Only consider LoRA-SFT as a GRPO starting point if it reaches or exceeds the baseline accuracy 0.36.
 If it remains below baseline, pause SFT-style approaches and focus on prompt/reward/GRPO changes.
 ```
+
+## Prompt Sweep Plan
+
+Motivation:
+
+```text
+Full SFT and LoRA SFT have both degraded early checkpoint accuracy on the 0.5B model.
+Before spending more GPU time on training, test whether baseline performance is prompt-sensitive.
+```
+
+Prompt styles:
+
+```text
+default: original careful math prompt with <answer>...</answer>
+concise_xml: shorter prompt that still requests <answer>number</answer>
+careful_no_xml: careful step-by-step prompt without XML pressure
+direct: short prompt asking for the final numeric answer
+```
+
+Decision rule:
+
+```text
+If a prompt style improves baseline above 0.36, use that style for future eval and consider aligning GRPO/SFT prompts with it.
+If prompt styles do not improve baseline, focus next on reward shaping or a larger model rather than more 0.5B SFT.
+```

@@ -8,7 +8,7 @@ import torch
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from grpo_full.data import GSM8KPromptDataset
+from grpo_full.data import GSM8KPromptDataset, PROMPT_STYLES
 from grpo_full.grpo import get_device, select_dtype
 from grpo_full.rewards import extract_numeric_prediction, normalize_number
 
@@ -65,6 +65,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, float | int | str]:
         split=args.split,
         max_examples=args.max_examples,
         seed=args.seed,
+        prompt_style=args.prompt_style,
     )
 
     output_path = Path(args.output_jsonl)
@@ -109,6 +110,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, float | int | str]:
                 "prediction": prediction,
                 "correct": item_correct,
                 "completion": completion,
+                "prompt_style": args.prompt_style,
             }
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
@@ -123,6 +125,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, float | int | str]:
         "accuracy": accuracy,
         "mean_completion_tokens": mean_completion_tokens,
         "output_jsonl": str(output_path),
+        "prompt_style": args.prompt_style,
     }
 
 
@@ -135,6 +138,7 @@ def main() -> None:
     parser.add_argument("--max-examples", type=int, default=100)
     parser.add_argument("--max-prompt-length", type=int, default=512)
     parser.add_argument("--max-new-tokens", type=int, default=256)
+    parser.add_argument("--prompt-style", choices=sorted(PROMPT_STYLES), default="default")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output-jsonl", default="eval_outputs/gsm8k_eval.jsonl")
     args = parser.parse_args()

@@ -168,6 +168,23 @@ python -m grpo_full.eval \
 
 Compare `accuracy`, `correct`, and the JSONL records to inspect where the model improves or fails.
 
+## Prompt Sweep
+
+Before running more training, compare prompt styles on the base model:
+
+```bash
+for style in default concise_xml careful_no_xml direct; do
+  python -m grpo_full.eval \
+    --model Qwen/Qwen2.5-0.5B-Instruct \
+    --split test \
+    --max-examples 100 \
+    --prompt-style ${style} \
+    --output-jsonl eval_outputs/baseline_prompt_${style}_gsm8k.jsonl
+done
+```
+
+The default prompt style is the original project prompt. Other styles are eval-only unless a config or script explicitly uses them.
+
 ## Notes
 
 This is a minimal research and learning implementation, not a high-throughput distributed trainer. For larger runs, the next steps are usually Accelerate/FSDP, vLLM rollouts, LoRA/QLoRA, a reward model server, and an evaluation harness.
