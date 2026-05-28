@@ -146,3 +146,59 @@ Decision rule:
 ```text
 Do not assume step300 is best. The pure-GRPO runs already showed that earlier checkpoints can be better than later checkpoints.
 ```
+
+## SFT Run 1 Outcome
+
+Config:
+
+```text
+model: Qwen/Qwen2.5-0.5B-Instruct
+steps: 300
+learning_rate: 5e-6
+gradient_accumulation_steps: 8
+max_length: 768
+output: outputs/sft-qwen-0.5b
+```
+
+Eval results on the same 100-example GSM8K test subset:
+
+| Checkpoint | Correct | Accuracy | Mean completion tokens | Result |
+|---:|---:|---:|---:|---|
+| step100 | 24 | 0.24 | 115.76 | Worse than baseline |
+| step200 | 31 | 0.31 | 111.33 | Best SFT run1 checkpoint, still worse than baseline |
+| step300 | 27 | 0.27 | 114.80 | Worse than baseline |
+
+Conclusion:
+
+```text
+SFT run1 should not be used as the starting point for GRPO-after-SFT.
+It is worse than the baseline accuracy 0.36 and far below the best pure-GRPO checkpoint accuracy 0.41.
+```
+
+Qualitative diagnosis from wrong examples:
+
+```text
+The model often learned to emit <answer>...</answer>, but the reasoning degraded.
+Common failures included misunderstanding the problem statement, applying the wrong quantity, and writing inconsistent arithmetic traces.
+```
+
+Example failure patterns:
+
+```text
+- Janet ducks: treated eaten/baked eggs incorrectly and predicted 33 instead of 18.
+- Robe fiber: doubled the blue fiber and predicted 5 instead of 3.
+- House flip: applied the 150% increase to total cost instead of original house value and predicted 65000 instead of 70000.
+- Sprinting: used 7 sessions instead of 3 times per week and predicted 1260 instead of 540.
+- Discounted glasses: treated the discount amount as the final price for every glass and predicted 32 instead of 64.
+```
+
+Next SFT direction:
+
+```text
+Try a more conservative SFT run before returning to GRPO-after-SFT:
+- learning_rate: 1e-6
+- num_steps: 200
+- save_every: 50
+- output_dir: outputs/sft-qwen-0.5b-run2
+- run_name: qwen0.5b-gsm8k-sft-run2-lr1e6
+```
