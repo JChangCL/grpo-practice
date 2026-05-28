@@ -272,3 +272,41 @@ Decision rule:
 ```text
 Select the best early checkpoint by GSM8K test accuracy. Do not continue training past the planned run without eval, because Run 2 collapsed by step200.
 ```
+
+## LoRA SFT Plan
+
+Motivation:
+
+```text
+Full-parameter SFT run1 and run2 both degraded GSM8K accuracy below the base-model baseline.
+The next SFT attempt should avoid overwriting the base instruct model's existing reasoning behavior.
+LoRA trains a small adapter and should be less destructive than full fine-tuning.
+```
+
+Config:
+
+```text
+config: configs/sft_lora_gsm8k.yaml
+model_name: Qwen/Qwen2.5-0.5B-Instruct
+output_dir: outputs/sft-lora-qwen-0.5b-run1
+steps: 200
+learning_rate: 1e-5
+save_every: 50
+lora_r: 8
+lora_alpha: 16
+lora_dropout: 0.05
+target_modules: q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj
+```
+
+Eval checkpoints:
+
+```text
+step50, step100, step150, step200
+```
+
+Decision rule:
+
+```text
+Only consider LoRA-SFT as a GRPO starting point if it reaches or exceeds the baseline accuracy 0.36.
+If it remains below baseline, pause SFT-style approaches and focus on prompt/reward/GRPO changes.
+```

@@ -48,6 +48,25 @@ class SFTWandbConfig:
 
 
 @dataclass
+class SFTLoraConfig:
+    enabled: bool = False
+    r: int = 8
+    alpha: int = 16
+    dropout: float = 0.05
+    target_modules: list[str] = field(
+        default_factory=lambda: [
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+        ]
+    )
+
+
+@dataclass
 class SFTConfig:
     model_name: str = "Qwen/Qwen2.5-0.5B-Instruct"
     output_dir: str = "outputs/sft-qwen-0.5b"
@@ -55,6 +74,7 @@ class SFTConfig:
     dataset: SFTDatasetConfig = field(default_factory=SFTDatasetConfig)
     train: SFTTrainConfig = field(default_factory=SFTTrainConfig)
     wandb: SFTWandbConfig = field(default_factory=SFTWandbConfig)
+    lora: SFTLoraConfig = field(default_factory=SFTLoraConfig)
 
 
 def merge_dataclass(cls: type, values: dict[str, Any]):
@@ -73,6 +93,7 @@ def load_sft_config(path: str | Path) -> SFTConfig:
         dataset=merge_dataclass(SFTDatasetConfig, raw.get("dataset", {})),
         train=merge_dataclass(SFTTrainConfig, raw.get("train", {})),
         wandb=merge_dataclass(SFTWandbConfig, raw.get("wandb", {})),
+        lora=merge_dataclass(SFTLoraConfig, raw.get("lora", {})),
     )
 
 
@@ -173,15 +194,38 @@ class SFTTrainer:
             trust_remote_code=True,
         ).to(self.device)
         self.model.config.use_cache = False
+        if cfg.lora.enabled:
+            self.model = self.apply_lora(self.model)
 
         self.optimizer = AdamW(
-            self.model.parameters(),
+            (param for param in self.model.parameters() if param.requires_grad),
             lr=self.train_cfg.learning_rate,
             weight_decay=self.train_cfg.weight_decay,
         )
         rows = load_gsm8k_rows(cfg.dataset)
         self.batcher = SFTBatcher(rows, self.tokenizer, self.train_cfg.max_length, cfg.seed)
         self.run = self.init_wandb()
+
+    def apply_lora(self, model):
+        try:
+            from peft import LoraConfig, TaskType, get_peft_model
+        except ImportError as exc:
+            raise ImportError(
+                "LoRA SFT requires the `peft` package. Run `pip install -r requirements.txt` first."
+            ) from exc
+
+        lora_cfg = self.cfg.lora
+        peft_config = LoraConfig(
+            task_type=TaskType.CAUSAL_LM,
+            r=lora_cfg.r,
+            lora_alpha=lora_cfg.alpha,
+            lora_dropout=lora_cfg.dropout,
+            target_modules=lora_cfg.target_modules,
+            bias="none",
+        )
+        model = get_peft_model(model, peft_config)
+        model.print_trainable_parameters()
+        return model
 
     def init_wandb(self):
         os.environ.setdefault("WANDB_MODE", self.cfg.wandb.mode)

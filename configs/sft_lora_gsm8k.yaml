@@ -1,0 +1,39 @@
+model_name: Qwen/Qwen2.5-0.5B-Instruct
+output_dir: outputs/sft-lora-qwen-0.5b-run1
+seed: 42
+
+dataset:
+  name: openai/gsm8k
+  config_name: main
+  split: train
+  max_examples: 2000
+
+train:
+  num_steps: 200
+  batch_size: 1
+  gradient_accumulation_steps: 8
+  max_length: 768
+  learning_rate: 0.00001
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+  log_every: 5
+  save_every: 50
+
+lora:
+  enabled: true
+  r: 8
+  alpha: 16
+  dropout: 0.05
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+wandb:
+  project: grpo-full
+  run_name: qwen0.5b-gsm8k-sft-lora-run1
+  mode: online

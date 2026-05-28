@@ -33,6 +33,7 @@ WANDB_MODE=offline python -m grpo_full.train --config configs/grpo_tiny.yaml
 ```text
 configs/grpo_tiny.yaml       # Small-model full GRPO config
 configs/sft_gsm8k.yaml       # GSM8K supervised fine-tuning config
+configs/sft_lora_gsm8k.yaml  # GSM8K LoRA supervised fine-tuning config
 configs/grpo_after_sft.yaml  # GRPO config that starts from the SFT checkpoint
 docs/outline.md              # Phased design and implementation outline
 grpo_full/config.py          # Dataclass config and YAML loader
@@ -104,6 +105,26 @@ python -m grpo_full.train --config configs/grpo_after_sft.yaml
 ```
 
 The `configs/grpo_after_sft.yaml` file expects the SFT checkpoint at `outputs/sft-qwen-0.5b/step-300`.
+
+## LoRA SFT
+
+Full-parameter SFT degraded GSM8K eval accuracy in early experiments. LoRA SFT is a more conservative alternative that trains adapters while keeping the base model mostly frozen:
+
+```bash
+python -m grpo_full.sft --config configs/sft_lora_gsm8k.yaml
+```
+
+Evaluate the LoRA adapter checkpoints with the same eval command. The evaluator automatically detects PEFT adapter checkpoints:
+
+```bash
+for step in 50 100 150 200; do
+  python -m grpo_full.eval \
+    --model outputs/sft-lora-qwen-0.5b-run1/step-${step} \
+    --split test \
+    --max-examples 100 \
+    --output-jsonl eval_outputs/sft_lora_run1_step${step}_gsm8k.jsonl
+done
+```
 
 ## Key Metrics
 

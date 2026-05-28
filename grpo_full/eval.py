@@ -22,6 +22,31 @@ def is_correct(prediction: str | None, expected: str) -> bool:
         return False
 
 
+def load_eval_model(model_path: str, dtype: torch.dtype, device: torch.device):
+    adapter_config = Path(model_path) / "adapter_config.json"
+    if adapter_config.exists():
+        try:
+            from peft import PeftConfig, PeftModel
+        except ImportError as exc:
+            raise ImportError(
+                "Evaluating a LoRA checkpoint requires the `peft` package. Run `pip install -r requirements.txt` first."
+            ) from exc
+
+        peft_config = PeftConfig.from_pretrained(model_path)
+        base_model = AutoModelForCausalLM.from_pretrained(
+            peft_config.base_model_name_or_path,
+            torch_dtype=dtype,
+            trust_remote_code=True,
+        ).to(device)
+        return PeftModel.from_pretrained(base_model, model_path).to(device)
+
+    return AutoModelForCausalLM.from_pretrained(
+        model_path,
+        torch_dtype=dtype,
+        trust_remote_code=True,
+    ).to(device)
+
+
 def evaluate(args: argparse.Namespace) -> dict[str, float | int | str]:
     device = get_device()
     dtype = select_dtype(device)
@@ -31,11 +56,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, float | int | str]:
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    model = AutoModelForCausalLM.from_pretrained(
-        args.model,
-        torch_dtype=dtype,
-        trust_remote_code=True,
-    ).to(device)
+    model = load_eval_model(args.model, dtype, device)
     model.eval()
 
     dataset = GSM8KPromptDataset(
