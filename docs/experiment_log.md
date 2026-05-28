@@ -130,3 +130,19 @@ SFT config: configs/sft_gsm8k.yaml
 SFT output: outputs/sft-qwen-0.5b/step-300
 GRPO-after-SFT config: configs/grpo_after_sft.yaml
 ```
+
+Colab run order:
+
+```text
+1. Pull commit 1595fe4 or newer.
+2. Run SFT with configs/sft_gsm8k.yaml.
+3. Evaluate SFT step100, step200, and step300 on the same 100-example GSM8K test subset.
+4. Copy all SFT checkpoints and eval_outputs to Google Drive.
+5. If any SFT checkpoint beats baseline accuracy 0.36, run GRPO-after-SFT from the best SFT checkpoint.
+```
+
+Decision rule:
+
+```text
+Do not assume step300 is best. The pure-GRPO runs already showed that earlier checkpoints can be better than later checkpoints.
+```

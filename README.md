@@ -61,23 +61,43 @@ GSM8K answers usually include reasoning text followed by `#### final_answer`. Th
 
 ## SFT Then GRPO
 
+On Colab, pull the latest code first:
+
+```bash
+%cd /content/grpo-practice
+git pull
+git log --oneline -3
+```
+
 Run a short GSM8K supervised fine-tuning stage:
 
 ```bash
 python -m grpo_full.sft --config configs/sft_gsm8k.yaml
 ```
 
-Evaluate the SFT checkpoint:
+Evaluate all saved SFT checkpoints, not just the final one:
 
 ```bash
-python -m grpo_full.eval \
-  --model outputs/sft-qwen-0.5b/step-300 \
-  --split test \
-  --max-examples 100 \
-  --output-jsonl eval_outputs/sft_step300_gsm8k.jsonl
+for step in 100 200 300; do
+  python -m grpo_full.eval \
+    --model outputs/sft-qwen-0.5b/step-${step} \
+    --split test \
+    --max-examples 100 \
+    --output-jsonl eval_outputs/sft_step${step}_gsm8k.jsonl
+done
 ```
 
-Then run GRPO from the SFT checkpoint:
+Copy checkpoints and eval outputs to Google Drive before starting the next stage:
+
+```bash
+mkdir -p /content/drive/MyDrive/grpo-practice/checkpoints/sft-qwen-0.5b
+mkdir -p /content/drive/MyDrive/grpo-practice/eval_outputs
+
+cp -r outputs/sft-qwen-0.5b/step-* /content/drive/MyDrive/grpo-practice/checkpoints/sft-qwen-0.5b/
+cp eval_outputs/sft_step*_gsm8k.jsonl /content/drive/MyDrive/grpo-practice/eval_outputs/
+```
+
+If the SFT checkpoint improves over the baseline `0.36` accuracy, run GRPO from the best SFT checkpoint. The default after-SFT config starts from `outputs/sft-qwen-0.5b/step-300`:
 
 ```bash
 python -m grpo_full.train --config configs/grpo_after_sft.yaml
