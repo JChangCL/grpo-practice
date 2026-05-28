@@ -30,6 +30,7 @@ This document tracks the GRPO experiments run on `Qwen/Qwen2.5-0.5B-Instruct` wi
 | Run 3 | same as above | step100 | 35 | 0.35 | Slightly worse than baseline |
 | Run 4 | fallback reward, `t256`, `lr=1.5e-6`, `kl=0.10`, `steps=125` | step75 | 30 | 0.30 | Bad |
 | Run 4 | same as above | step100 | 28 | 0.28 | Bad |
+| Run 5 | format-weighted reward, `t256`, `lr=2e-6`, `kl=0.08`, `steps=125` | step100 | 35 | 0.35 | Format pressure hurt performance |
 
 ## Current Best
 
@@ -48,6 +49,7 @@ absolute improvement = +0.05
 - Run 2 found a useful early checkpoint at step100, but continued training to step200 caused severe collapse.
 - Run 3 controlled KL very strongly, but it was too conservative and did not improve over baseline.
 - Run 4 used an intermediate LR/KL setting, but eval performance degraded.
+- Run 5 changed only the reward weighting toward formatted answers. It did not improve eval accuracy, suggesting that stronger format pressure was premature for this model.
 - W&B reward curves alone were not enough to judge success. GSM8K eval accuracy was necessary because some runs showed reward signal without generalizing.
 
 ## Interpretation
@@ -63,11 +65,11 @@ max_new_tokens: 256
 
 However, Run 2 also collapsed after step100. This suggests that the current reward provides useful signal early, but longer optimization can push the policy into behavior that does not generalize to the GSM8K test subset.
 
-## Run 5 Plan
+## Run 5 Outcome
 
-Keep Run 2's training strength, but change the reward weights to value formatted answers more strongly.
+Run 5 kept Run 2's training strength, but changed the reward weights to value formatted answers more strongly.
 
-Suggested config:
+Config:
 
 ```yaml
 train:
@@ -84,7 +86,7 @@ wandb:
   run_name: qwen0.5b-gsm8k-formatweighted-t256-lr2e6-kl008-run5
 ```
 
-Suggested reward direction:
+Reward direction:
 
 ```text
 formatted correct: +1.2
@@ -96,19 +98,27 @@ format missing:    -0.1
 length reward:     +0.1 / -0.1
 ```
 
-Goal:
+Result:
 
 ```text
-Beat Run 2 step100 accuracy = 0.41
-Avoid collapse after step100
+Run 5 step100 accuracy = 0.35
+Baseline accuracy = 0.36
+Run 2 step100 accuracy = 0.41
 ```
 
-Eval checkpoints:
+Interpretation:
 
 ```text
-step25
-step50
-step75
-step100
-step125
+Increasing format pressure too early hurt eval performance.
+The model still benefited more from the original numeric fallback reward.
 ```
+
+## Next Direction
+
+The best pure-GRPO result remains Run 2 step100. Further LR/KL tuning did not beat it, and format-weighted reward underperformed. The next high-leverage direction is to add a short GSM8K supervised fine-tuning stage before GRPO:
+
+```text
+base model -> GSM8K SFT -> eval SFT -> GRPO from SFT checkpoint
+```
+
+This should give the model a better starting point for GSM8K reasoning and answer formatting before RL optimization.
