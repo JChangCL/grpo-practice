@@ -111,8 +111,11 @@ The `configs/grpo_after_sft.yaml` file expects the SFT checkpoint at `outputs/sf
 Full-parameter SFT degraded GSM8K eval accuracy in early experiments. LoRA SFT is a more conservative alternative that trains adapters while keeping the base model mostly frozen:
 
 ```bash
+pip install -r requirements.txt
 python -m grpo_full.sft --config configs/sft_lora_gsm8k.yaml
 ```
+
+If Colab reports an incompatible `torchao` version while PEFT is creating LoRA adapters, rerun `pip install -r requirements.txt` and restart the runtime before training.
 
 Evaluate the LoRA adapter checkpoints with the same eval command. The evaluator automatically detects PEFT adapter checkpoints:
 
