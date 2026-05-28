@@ -202,3 +202,42 @@ Try a more conservative SFT run before returning to GRPO-after-SFT:
 - output_dir: outputs/sft-qwen-0.5b-run2
 - run_name: qwen0.5b-gsm8k-sft-run2-lr1e6
 ```
+
+## SFT Run 2 Partial Outcome
+
+Config direction:
+
+```text
+More conservative full fine-tune than SFT run1:
+- learning_rate: 1e-6
+- num_steps: 200
+- save_every: 50
+- output_dir: outputs/sft-qwen-0.5b-run2
+```
+
+Partial eval results on the same 100-example GSM8K test subset:
+
+| Checkpoint | Correct | Accuracy | Mean completion tokens | Result |
+|---:|---:|---:|---:|---|
+| step50 | 29 | 0.29 | 168.55 | Worse than baseline |
+| step100 | 25 | 0.25 | 138.53 | Worse than baseline |
+
+Interpretation:
+
+```text
+Lowering SFT LR from 5e-6 to 1e-6 did not fix the degradation.
+The SFT direction is currently not producing a useful GRPO starting checkpoint.
+Do not run GRPO-after-SFT from SFT run2 unless a later checkpoint unexpectedly beats baseline 0.36.
+```
+
+Current recommendation:
+
+```text
+Pause full-parameter GSM8K SFT for now.
+Return to the pure-GRPO setting that already produced the best observed checkpoint:
+- fallback reward
+- learning_rate: 2e-6
+- kl_beta: 0.08
+- max_new_tokens: 256
+- early checkpoint selection around step50-step100
+```
