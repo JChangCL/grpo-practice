@@ -27,5 +27,5 @@ train:
 
 wandb:
   project: grpo-full
-  run_name: qwen0.5b-gsm8k-fallback-t256-lr2e6-kl008-run5
+  run_name: qwen0.5b-gsm8k-fallback-t256-lr2e6-kl008-run6
   mode: online
