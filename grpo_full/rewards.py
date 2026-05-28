@@ -31,7 +31,7 @@ def normalize_number(text: str) -> float:
 
 
 def format_reward(completion: str) -> float:
-    return 0.3 if extract_answer(completion) is not None else -0.1
+    return 0.2 if extract_answer(completion) is not None else -0.2
 
 
 def math_reward(completion: str, expected: str) -> float:
@@ -45,13 +45,13 @@ def math_reward(completion: str, expected: str) -> float:
 
     if formatted_answer is not None:
         try:
-            return 1.2 if normalize_number(formatted_answer) == expected_value else -0.5
+            return 1.0 if normalize_number(formatted_answer) == expected_value else -0.5
         except ValueError:
-            return -0.6
+            return -0.5
 
     if fallback_answer is not None:
         try:
-            return 0.25 if normalize_number(fallback_answer) == expected_value else -0.2
+            return 0.5 if normalize_number(fallback_answer) == expected_value else -0.2
         except ValueError:
             return -0.2
 
