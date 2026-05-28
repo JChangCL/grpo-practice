@@ -16,16 +16,16 @@ train:
   max_new_tokens: 256
   temperature: 0.9
   top_p: 0.95
-  learning_rate: 0.000002
+  learning_rate: 0.0000015
   weight_decay: 0.0
   max_grad_norm: 1.0
   clip_range: 0.2
-  kl_beta: 0.12
+  kl_beta: 0.10
   advantage_eps: 0.000001
   log_every: 1
   save_every: 25
 
 wandb:
   project: grpo-full
-  run_name: qwen0.5b-gsm8k-fallback-t256-lr2e6-kl012-run3
+  run_name: qwen0.5b-gsm8k-fallback-t256-lr2e6-kl010-run4
   mode: online
