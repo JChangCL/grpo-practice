@@ -1,0 +1,114 @@
+# GRPO GSM8K Experiment Log
+
+This document tracks the GRPO experiments run on `Qwen/Qwen2.5-0.5B-Instruct` with GSM8K.
+
+## Setup
+
+- Base model: `Qwen/Qwen2.5-0.5B-Instruct`
+- Dataset: `openai/gsm8k`
+- Eval split: `test`
+- Eval sample size: 100 examples
+- Training method: GRPO with reference-model KL penalty, PPO-style ratio clipping, group-relative advantages, and W&B logging
+- Current reward family: fallback numeric reward
+
+## Baseline
+
+| Model | Split | Examples | Correct | Accuracy |
+|---|---:|---:|---:|---:|
+| `Qwen/Qwen2.5-0.5B-Instruct` | test | 100 | 36 | 0.36 |
+
+## Experiment Summary
+
+| Experiment | Key Setting | Checkpoint | Correct | Accuracy | Result |
+|---|---|---:|---:|---:|---|
+| Baseline | Original model, no GRPO | none | 36 | 0.36 | Reference baseline |
+| Run 1 | fallback reward, `t256`, `lr=5e-6`, `kl=0.04`, `steps=100` | step100 | 34 | 0.34 | Worse than baseline |
+| Run 2 | fallback reward, `t256`, `lr=2e-6`, `kl=0.08`, `steps=200` | step50 | 37 | 0.37 | Slight improvement |
+| Run 2 | same as above | step100 | 41 | 0.41 | Best checkpoint so far |
+| Run 2 | same as above | step200 | 12 | 0.12 | Collapsed after too much training |
+| Run 3 | fallback reward, `t256`, `lr=1e-6`, `kl=0.12`, `steps=125` | step75 | 36 | 0.36 | Same as baseline |
+| Run 3 | same as above | step100 | 35 | 0.35 | Slightly worse than baseline |
+| Run 4 | fallback reward, `t256`, `lr=1.5e-6`, `kl=0.10`, `steps=125` | step75 | 30 | 0.30 | Bad |
+| Run 4 | same as above | step100 | 28 | 0.28 | Bad |
+
+## Current Best
+
+Current best checkpoint:
+
+```text
+Run 2 step100
+accuracy = 0.41
+baseline = 0.36
+absolute improvement = +0.05
+```
+
+## Observations
+
+- Run 1 had reward signal, but the update appeared too aggressive and did not improve eval accuracy.
+- Run 2 found a useful early checkpoint at step100, but continued training to step200 caused severe collapse.
+- Run 3 controlled KL very strongly, but it was too conservative and did not improve over baseline.
+- Run 4 used an intermediate LR/KL setting, but eval performance degraded.
+- W&B reward curves alone were not enough to judge success. GSM8K eval accuracy was necessary because some runs showed reward signal without generalizing.
+
+## Interpretation
+
+The best result so far came from Run 2:
+
+```yaml
+learning_rate: 0.000002
+kl_beta: 0.08
+max_prompt_length: 512
+max_new_tokens: 256
+```
+
+However, Run 2 also collapsed after step100. This suggests that the current reward provides useful signal early, but longer optimization can push the policy into behavior that does not generalize to the GSM8K test subset.
+
+## Run 5 Plan
+
+Keep Run 2's training strength, but change the reward weights to value formatted answers more strongly.
+
+Suggested config:
+
+```yaml
+train:
+  num_steps: 125
+  batch_size: 2
+  num_generations: 4
+  max_prompt_length: 512
+  max_new_tokens: 256
+  learning_rate: 0.000002
+  kl_beta: 0.08
+  save_every: 25
+
+wandb:
+  run_name: qwen0.5b-gsm8k-formatweighted-t256-lr2e6-kl008-run5
+```
+
+Suggested reward direction:
+
+```text
+formatted correct: +1.2
+formatted wrong:   -0.6
+fallback correct:  +0.25
+fallback wrong:    -0.2
+format bonus:      +0.3
+format missing:    -0.1
+length reward:     +0.1 / -0.1
+```
+
+Goal:
+
+```text
+Beat Run 2 step100 accuracy = 0.41
+Avoid collapse after step100
+```
+
+Eval checkpoints:
+
+```text
+step25
+step50
+step75
+step100
+step125
+```
