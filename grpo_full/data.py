@@ -33,6 +33,19 @@ def extract_gsm8k_answer(answer_text: str) -> str:
     return answer_text.strip().replace(",", "")
 
 
+def format_gsm8k_sft_answer(answer_text: str) -> str:
+    marker = "####"
+    if marker not in answer_text:
+        return answer_text.strip()
+
+    reasoning, final_answer = answer_text.split(marker, maxsplit=1)
+    final_answer = final_answer.strip().replace(",", "")
+    reasoning = reasoning.strip()
+    if reasoning:
+        return f"{reasoning}\n<answer>{final_answer}</answer>"
+    return f"<answer>{final_answer}</answer>"
+
+
 class GSM8KPromptDataset:
     def __init__(
         self,

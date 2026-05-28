@@ -32,9 +32,12 @@ WANDB_MODE=offline python -m grpo_full.train --config configs/grpo_tiny.yaml
 
 ```text
 configs/grpo_tiny.yaml       # Small-model full GRPO config
+configs/sft_gsm8k.yaml       # GSM8K supervised fine-tuning config
+configs/grpo_after_sft.yaml  # GRPO config that starts from the SFT checkpoint
 docs/outline.md              # Phased design and implementation outline
 grpo_full/config.py          # Dataclass config and YAML loader
 grpo_full/data.py            # GSM8K prompt dataset
+grpo_full/sft.py             # GSM8K supervised fine-tuning trainer
 grpo_full/rewards.py         # Replaceable reward functions
 grpo_full/grpo.py            # GRPO sampling, loss, and trainer
 grpo_full/eval.py            # GSM8K baseline/checkpoint evaluator
@@ -55,6 +58,32 @@ dataset:
 ```
 
 GSM8K answers usually include reasoning text followed by `#### final_answer`. The trainer extracts the value after `####` and uses it as the reward target.
+
+## SFT Then GRPO
+
+Run a short GSM8K supervised fine-tuning stage:
+
+```bash
+python -m grpo_full.sft --config configs/sft_gsm8k.yaml
+```
+
+Evaluate the SFT checkpoint:
+
+```bash
+python -m grpo_full.eval \
+  --model outputs/sft-qwen-0.5b/step-300 \
+  --split test \
+  --max-examples 100 \
+  --output-jsonl eval_outputs/sft_step300_gsm8k.jsonl
+```
+
+Then run GRPO from the SFT checkpoint:
+
+```bash
+python -m grpo_full.train --config configs/grpo_after_sft.yaml
+```
+
+The `configs/grpo_after_sft.yaml` file expects the SFT checkpoint at `outputs/sft-qwen-0.5b/step-300`.
 
 ## Key Metrics
 

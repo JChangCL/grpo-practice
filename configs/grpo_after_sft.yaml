@@ -1,0 +1,31 @@
+model_name: outputs/sft-qwen-0.5b/step-300
+output_dir: outputs/grpo-qwen-0.5b-after-sft
+seed: 42
+
+dataset:
+  name: openai/gsm8k
+  config_name: main
+  split: train
+  max_examples: 2000
+
+train:
+  num_steps: 125
+  batch_size: 2
+  num_generations: 4
+  max_prompt_length: 512
+  max_new_tokens: 256
+  temperature: 0.9
+  top_p: 0.95
+  learning_rate: 0.000002
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+  clip_range: 0.2
+  kl_beta: 0.08
+  advantage_eps: 0.000001
+  log_every: 1
+  save_every: 25
+
+wandb:
+  project: grpo-full
+  run_name: qwen0.5b-gsm8k-sft-grpo-run1
+  mode: online

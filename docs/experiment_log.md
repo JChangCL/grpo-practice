@@ -122,3 +122,11 @@ base model -> GSM8K SFT -> eval SFT -> GRPO from SFT checkpoint
 ```
 
 This should give the model a better starting point for GSM8K reasoning and answer formatting before RL optimization.
+
+Initial SFT plan:
+
+```text
+SFT config: configs/sft_gsm8k.yaml
+SFT output: outputs/sft-qwen-0.5b/step-300
+GRPO-after-SFT config: configs/grpo_after_sft.yaml
+```
