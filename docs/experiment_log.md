@@ -241,3 +241,34 @@ Return to the pure-GRPO setting that already produced the best observed checkpoi
 - max_new_tokens: 256
 - early checkpoint selection around step50-step100
 ```
+
+## Run 6 Plan
+
+Since both SFT runs underperformed the baseline, resume pure GRPO from the base instruct model and treat it as an early-stop rerun of the best previous setting.
+
+Config:
+
+```text
+config: configs/grpo_tiny.yaml
+model_name: Qwen/Qwen2.5-0.5B-Instruct
+output_dir: outputs/grpo-qwen-0.5b-run6
+reward: fallback numeric reward
+learning_rate: 2e-6
+kl_beta: 0.08
+max_new_tokens: 256
+num_steps: 125
+save_every: 25
+run_name: qwen0.5b-gsm8k-fallback-t256-lr2e6-kl008-run6
+```
+
+Eval checkpoints:
+
+```text
+step25, step50, step75, step100, step125
+```
+
+Decision rule:
+
+```text
+Select the best early checkpoint by GSM8K test accuracy. Do not continue training past the planned run without eval, because Run 2 collapsed by step200.
+```

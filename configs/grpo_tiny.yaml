@@ -1,5 +1,5 @@
 model_name: Qwen/Qwen2.5-0.5B-Instruct
-output_dir: outputs/grpo-qwen-0.5b
+output_dir: outputs/grpo-qwen-0.5b-run6
 seed: 42
 
 dataset:
